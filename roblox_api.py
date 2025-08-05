@@ -13,7 +13,7 @@ def get_user_id(username):
     res = requests.post(url, json=payload, headers=HEADERS)
     if res.ok:
         data = res.json()
-        if data["data"]:
+        if data.get("data"):
             return data["data"][0]["id"]
     return None
 
@@ -21,7 +21,7 @@ def get_display_name(user_id):
     url = f"https://users.roblox.com/v1/users/{user_id}"
     res = requests.get(url, headers=HEADERS)
     if res.ok:
-        return res.json()["displayName"]
+        return res.json().get("displayName")
     return None
 
 def set_rank(user_id):
@@ -29,3 +29,19 @@ def set_rank(user_id):
     payload = {"roleId": RANK_2}
     res = requests.patch(url, headers=HEADERS, json=payload)
     return res.status_code == 200
+
+def set_rank_if_in_group(user_id):
+    # Kontrollera först om användaren är medlem i gruppen
+    url_check = f"https://groups.roblox.com/v1/groups/{GROUP_ID}/users/{user_id}"
+    res_check = requests.get(url_check, headers=HEADERS)
+    if not res_check.ok:
+        print(f"User {user_id} not in group or API error: {res_check.status_code} - {res_check.text}")
+        return False
+    
+    # Användaren är i gruppen, försök ranka
+    url_rank = f"https://groups.roblox.com/v1/groups/{GROUP_ID}/users/{user_id}"
+    payload = {"roleId": RANK_2}
+    res_rank = requests.patch(url_rank, headers=HEADERS, json=payload)
+    print(f"Rank response status: {res_rank.status_code}")
+    print(f"Rank response content: {res_rank.text}")
+    return res_rank.status_code == 200
