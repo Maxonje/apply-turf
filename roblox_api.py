@@ -40,10 +40,27 @@ def set_rank_if_in_group(user_id):
         print(f"[set_rank] User {user_id} is not in the group {GROUP_ID}.")
         return False
 
-    # Användaren är i gruppen, försök ranka
+    # Användaren är i gruppen, försök ranka med CSRF-token hantering
     url_rank = f"https://groups.roblox.com/v1/groups/{GROUP_ID}/users/{user_id}"
     payload = {"roleId": RANK_2}
-    res_rank = requests.patch(url_rank, headers=HEADERS, json=payload)
+
+    # Första PATCH utan X-CSRF-TOKEN för att trigga token i svarshuvudena
+    temp_headers = HEADERS.copy()
+    if "X-CSRF-TOKEN" in temp_headers:
+        del temp_headers["X-CSRF-TOKEN"]
+
+    res_rank = requests.patch(url_rank, headers=temp_headers, json=payload)
+
+    if res_rank.status_code == 403:
+        # Hämta token från headers
+        token = res_rank.headers.get("x-csrf-token")
+        if not token:
+            print("[set_rank] Failed to get X-CSRF-TOKEN from response headers.")
+            return False
+
+        # Skicka PATCH igen med korrekt token
+        temp_headers["X-CSRF-TOKEN"] = token
+        res_rank = requests.patch(url_rank, headers=temp_headers, json=payload)
 
     print(f"[set_rank] Rank response status: {res_rank.status_code}")
     print(f"[set_rank] Rank response content: {res_rank.text}")
