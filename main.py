@@ -3,7 +3,7 @@ from discord import app_commands
 from discord.ext import commands
 from config import DISCORD_BOT_TOKEN, ALLOWED_ROLE_ID
 from key_manager import create_key, validate_key, mark_key_used
-from roblox_api import get_user_id, get_display_name, set_rank
+from roblox_api import get_user_id, get_display_name, set_rank_if_in_group
 
 intents = discord.Intents.default()
 bot = commands.Bot(command_prefix="!", intents=intents)
@@ -65,7 +65,7 @@ async def freeaccess(interaction: discord.Interaction, key: str, username: str):
         await interaction.followup.send(embed=embed, ephemeral=True)
         return
 
-    success = set_rank(user_id)
+    success = set_rank_if_in_group(user_id)
     if success:
         mark_key_used(key)
         embed = embed_message("Access Granted", "✅ You have been successfully ranked in the Roblox group!")
