@@ -3,17 +3,23 @@ from config import ROBLOX_COOKIE, GROUP_ID, RANK_2
 
 HEADERS = {
     "Cookie": f".ROBLOSECURITY={ROBLOX_COOKIE}",
-    "User-Agent": "RobloxDiscordBot/1.0"
+    "User-Agent": "RobloxDiscordBot/1.0",
+    "Content-Type": "application/json"
 }
 
 def get_user_id(username):
-    res = requests.get(f"https://users.roblox.com/v1/usernames/users", json={"usernames": [username]})
-    if res.ok and res.json()["data"]:
-        return res.json()["data"][0]["id"]
+    url = "https://users.roblox.com/v1/usernames/users"
+    payload = {"usernames": [username]}
+    res = requests.post(url, json=payload, headers=HEADERS)
+    if res.ok:
+        data = res.json()
+        if data["data"]:
+            return data["data"][0]["id"]
     return None
 
 def get_display_name(user_id):
-    res = requests.get(f"https://users.roblox.com/v1/users/{user_id}")
+    url = f"https://users.roblox.com/v1/users/{user_id}"
+    res = requests.get(url, headers=HEADERS)
     if res.ok:
         return res.json()["displayName"]
     return None
